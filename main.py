@@ -1,13 +1,26 @@
 import PySimpleGUI as sg
+import urllib
+from PIL import Image, ImageFilter
 import sys
+
+# informace pro automatickou aktualizaci
+# verze
+version = 1
+# určíme, jestli chceme kanál release, beta nebo jsme vývojová verze, v tomto případě neaktualizujeme
+type = "dev"
+
 
 # nastaví téma okna
 sg.theme("SystemDefault")
 
 def start():
-    # layout okna
-    layout_start = [[sg.Text("Vítejte! Vyhledávání aktualizací je zakázáno."), sg.Text(size=(12,1), key='-OUTPUT-')],
-                [sg.Button("Pokračovat"), sg.Button("Ukončit")]]
+    
+    if update():
+        layout_start = [[sg.Text("Vítejte! Je k dispozici aktualizace.\nPro stažení klikněte na stáhnout, budete přesměrováni do prohlížeče."), sg.Text(size=(12,1), key='-OUTPUT-')],
+                [sg.Button("Pokračovat")]]
+    else:
+        layout_start = [[sg.Text("Vítejte! Používáte nejnovější verzi GrafySouveti"), sg.Text(size=(12,1), key='-OUTPUT-')],
+                [sg.Button("Pokračovat")]]
 
     window_start = sg.Window("GrafySouveti - kontrola aktualizací", layout_start)
 
@@ -19,12 +32,9 @@ def start():
             konec()
         if event == "Pokračovat":
             window_start.close()
-            zadat()
+            zadat_serie()
 
-def zadat():
-    menu_def_zadat = [["Soubor", ["Ukončit", "Zkontrolovat aktualizace"]],
-            ["Nový", ["Prvek", "Spojení", "Skladební vztah"]]]
-
+def zadat_serie():
     layout_zadat = [
               [sg.Text("Prosím zadejte první prvek a vyberte jeho typ")],
               [sg.Input(key="-PRVEK-IN-")],
@@ -49,19 +59,44 @@ def zadat():
     
     event, values = window_zadat.read()
     window_zadat.close()
-    konec()
+    konec(True)
 
 def konec(crash=False):
+    """
+    Ukončí program
+    
+    Argumenty:
+
+    crash -- výchozí False, pokud True vyhodí chybovou hlášku s kontaktem a ukončí program s nenulovým chybovým kódem
+            pokud False, Vyhodí hlášku s poděkováním a zavře program s nulovým chybovým kódem
+    """
     if crash:
-        msg_crash = "Ale ne. Tohle se nemělo stát.\nProgram selhal a musel se ukončit.\nMůžete to zkusit znovu, nebo využijte emailového kontaktu\norangeorange0123@disroot.org"
+        msg_crash = "Ale ne. Tohle se nemělo stát.\nProgram selhal a musel se ukončit.\nMůžete to zkusit znovu, nebo využijte emailového kontaktu\norangeorange0123+gs@disroot.org"
         print(msg_crash)
         event, values = sg.Window("GrafySouveti - Program selhal", [[sg.Text(msg_crash)], [sg.Button("Zavřít")]]).read(close=True)
 
         sys.exit(1)
     else:
-        msg_exit = "Děkujeme za použití GrafySouveti"
+        msg_exit = "Děkujeme za použití GrafySouveti\nProgram vytvořil Štěpán Šebestian\norangeorange0123+gs@disroot.org"
         print(msg_exit)
         event, values = sg.Window("GrafySouveti - Konec", [[sg.Text(msg_exit)], [sg.Button("Zavřít")]]).read(close=True)
         sys.exit(0)
+
+def update():
+    """
+    Vyhledá aktualizace
+    """
+    if type == "release":
+        updateSource = urllib.urlopen("https://raw.githubusercontent.com/StepanSebestian/GrafySouveti/main/version.txt")
+    elif type == "beta":
+        updateSource = urllib.urlopen("https://raw.githubusercontent.com/StepanSebestian/GrafySouveti/beta/version.txt")
+    elif type == "dev":
+        return False
+    else:
+        # Co tady sakra dělám
+        konec(True)
+    updateContents = updateSource.read()
+
+    return updateContents > version
 
 start()
