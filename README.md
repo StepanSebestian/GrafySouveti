@@ -4,4 +4,4 @@ Tento program byl vyvtvořen pro zjednodušení zakreslování grafů souvětí 
 Byl vytvořen poté, co jsem viděl jak těžké je pro vyučující kreslit grafy souvětí na online výuku.
 
 Zatím podporuje
-* nic
+* Zadání všech větných členů
